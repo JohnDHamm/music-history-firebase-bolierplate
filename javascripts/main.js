@@ -12,7 +12,8 @@ firebase.auth().onAuthStateChanged(function(user) {
     // User is signed in.
     console.log("user logged in, dude", user.uid);
     currentUser = user.uid;
-    db.getSongs(templates.makeSongList, currentUser);
+    loadSongsToDOM(currentUser);
+    // db.getSongs(templates.makeSongList, currentUser);
   } else {
     // No user is signed in.
     console.log("user not logged in");
@@ -22,13 +23,13 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 
 // Using the REST API
-// function loadSongsToDOM() {
-//   $(".uiContainer--wrapper").html("");
-//   db.getSongs()
-//     .then(function(songData){
-//       templates.makeSongList(songData.songs);
-//     });
-// }
+function loadSongsToDOM(user) {
+  $(".uiContainer--wrapper").html("");
+  db.getSongs(user)
+    .then(function(songData){
+      templates.makeSongList(songData);
+    });
+}
 // loadSongsToDOM();
 
 // Send newSong data to db then reload DOM with updated song data
@@ -85,8 +86,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 $(document).on("click", ".save_new_btn", function() {
   let songObj = buildSongObj();
   db.addSong(songObj)
-    .then (function(songData) {
-      // console.log("song saved", songData.key);
+    .then (function(currentUser){
+      loadSongsToDOM(currentUser);
     });
 });
 
@@ -94,9 +95,6 @@ $(document).on("click", ".save_new_btn", function() {
 $(document).on("click", ".edit-btn", function () {
   let songId = $(this).data("edit-id");
   db.getSong(songId)
-    .then(function(songData){
-      return songData.val();
-    })
     .then(function(songObj){
       return templates.songForm(songObj, songId);
     })
@@ -109,13 +107,19 @@ $(document).on("click", ".edit-btn", function () {
 $(document).on("click", ".save_edit_btn", function() {
   let songObj = buildSongObj(),
       songId = $(this).attr("id");
-  db.editSong(songObj, songId);
+  db.editSong(songObj, songId)
+    .then (function(currentUser){
+      loadSongsToDOM(currentUser);
+    });
 });
 
 // // Remove song then reload the DOM w/out new song
 $(document).on("click", ".delete-btn", function () {
   let songId = $(this).data("delete-id");
-  db.deleteSong(songId);
+  db.deleteSong(songId)
+    .then (function(currentUser){
+      loadSongsToDOM(currentUser);
+    });
 });
 
 // User login section. Should ideally be in its own module
